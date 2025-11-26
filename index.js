@@ -45,6 +45,23 @@ async function run() {
     const riderCollection = db.collection("rider")
 
     // user releted apis 
+    app.get('/users',async(req,res)=>{
+      const result = await usersCollection.find().toArray()
+      res.send(result)
+    })
+    app.patch('/user/:id/role',async(req,res)=>{
+      const {id} = req.params
+      const {role} = req.body
+      const query = {}
+      if(id){
+        query._id=new ObjectId(id)
+      }
+      const update = {
+        $set:{role}
+      }
+      const result = await usersCollection.updateOne(query,update)
+      res.send(result)
+    })
     app.post('/user', async (req, res) => {
       const newUser = req.body
       newUser.createdAt = new Date()
