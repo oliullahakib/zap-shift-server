@@ -176,13 +176,35 @@ async function run() {
       const result = await riderCollection.insertOne(newRider)
       res.send(result)
     })
+   
      app.delete('/rider/:id', async (req, res) => {
       const { id } = req.params
       const query = { _id: new ObjectId(id) }
       const result = await riderCollection.deleteOne(query)
       res.send(result)
     })
+     app.patch('/rider/:id',async(req,res)=>{
+       const { id } = req.params
+       console.log(req.body)
+       const {status,email} = req.body
+      const query = { _id: new ObjectId(id) }
+      const update = {
+        $set:{status}
+      }
+      const result = await riderCollection.updateOne(query,update)
 
+      if(status==="accepted"){
+        const query={}
+        if(email){
+          query.email=email
+        }
+        const updateRole = {
+          $set:{role:"rider"}
+        }
+        const userResult = usersCollection.updateOne(query,updateRole)
+      }
+      res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
