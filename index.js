@@ -2,7 +2,8 @@ const express = require('express')
 const cors = require('cors');
 require('dotenv').config()
 const stripe = require('stripe')(`${process.env.PAYMENT_SECRET}`);
-
+const admin = require("firebase-admin");
+const serviceAccount = require("./zap-shift-firebase-adminsdk-.json");
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express()
@@ -18,9 +19,33 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
 // midleware 
 app.use(cors())
 app.use(express.json())
+
+// cusmont middleware 
+const vrifyFriebaseToken=async(req,res,next)=>{
+  const authorization = req.headers.authorization
+  
+  if(!authorization){
+    return res.status(401).send({message:"unauthorize access"})
+  }
+  const token = authorization.split(' ')[1]
+ 
+  if(!token){
+     return res.status(401).send({message:"unauthorize access"})
+  }
+  try {
+   console.log(token)
+  const decoded = await admin.auth().verifyIdToken(token)
+  next()
+ } catch (error) {
+  return res.status(401).send({message:"unauthorize access"})
+ }
+}
 
 app.get('/', (req, res) => {
   res.send('zap is shifting!!')
@@ -45,11 +70,11 @@ async function run() {
     const riderCollection = db.collection("rider")
 
     // user releted apis 
-    app.get('/users',async(req,res)=>{
+    app.get('/users',vrifyFriebaseToken,async(req,res)=>{
       const result = await usersCollection.find().toArray()
       res.send(result)
     })
-    app.patch('/user/:id/role',async(req,res)=>{
+    app.patch('/user/:id/role',vrifyFriebaseToken,async(req,res)=>{
       const {id} = req.params
       const {role} = req.body
       const query = {}
