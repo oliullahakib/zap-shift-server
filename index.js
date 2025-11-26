@@ -152,6 +152,10 @@ async function run() {
     })
 
     // rider related apis 
+    app.get('/riders',async(req,res)=>{
+      const result = await riderCollection.find().sort({createdAt:-1}).toArray()
+      res.send(result)
+    })
     app.post('/rider', async (req, res) => {
       const newRider = req.body
       newRider.createdAt = new Date()
@@ -170,6 +174,12 @@ async function run() {
         return res.send({ message: "Your Application already taken.Please wait for approval" })
       }
       const result = await riderCollection.insertOne(newRider)
+      res.send(result)
+    })
+     app.delete('/rider/:id', async (req, res) => {
+      const { id } = req.params
+      const query = { _id: new ObjectId(id) }
+      const result = await riderCollection.deleteOne(query)
       res.send(result)
     })
 
