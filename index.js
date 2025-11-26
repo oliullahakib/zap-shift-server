@@ -41,6 +41,7 @@ const vrifyFriebaseToken=async(req,res,next)=>{
   try {
    console.log(token)
   const decoded = await admin.auth().verifyIdToken(token)
+  req.token_email = decoded.email
   next()
  } catch (error) {
   return res.status(401).send({message:"unauthorize access"})
@@ -69,10 +70,34 @@ async function run() {
     const usersCollection = db.collection("users")
     const riderCollection = db.collection("rider")
 
+    // middleware with db 
+
+    const verifyAdmin = async(req,res,next)=>{
+    const email = req.token_email
+      const query = {}
+      if(email){
+        query.email = email
+      }
+      const result = await usersCollection.findOne(query)
+      if(result.role!=="admin"){
+        return res.status(403).send({message:"Forbidden access"})
+      }
+      next()
+    }
+
     // user releted apis 
-    app.get('/users',vrifyFriebaseToken,async(req,res)=>{
+    app.get('/users',vrifyFriebaseToken,verifyAdmin,async(req,res)=>{
       const result = await usersCollection.find().toArray()
       res.send(result)
+    })
+    app.get('/user/:email/role',async(req,res)=>{
+      const {email} = req.params
+      const query = {}
+      if(email){
+        query.email = email
+      }
+      const result = await usersCollection.findOne(query)
+      res.send({role:result.role})
     })
     app.patch('/user/:id/role',vrifyFriebaseToken,async(req,res)=>{
       const {id} = req.params
