@@ -219,11 +219,12 @@ async function run() {
     })
 
     // rider related apis 
-    app.get('/riders',async(req,res)=>{
+
+    app.get('/riders',vrifyFriebaseToken,verifyAdmin,async(req,res)=>{
       const result = await riderCollection.find().sort({createdAt:-1}).toArray()
       res.send(result)
     })
-    app.post('/rider', async (req, res) => {
+    app.post('/rider', vrifyFriebaseToken,async (req, res) => {
       const newRider = req.body
       newRider.createdAt = new Date()
       newRider.status = "pending"
@@ -231,7 +232,6 @@ async function run() {
         return res.send({message:"Email is requerd to apply"})
       }
       // checking the application 
-      console.log(newRider.email)
       const query = {}
       if (newRider.email) {
         query.email = newRider.email
@@ -244,13 +244,13 @@ async function run() {
       res.send(result)
     })
    
-     app.delete('/rider/:id', async (req, res) => {
+     app.delete('/rider/:id',vrifyFriebaseToken,verifyAdmin, async (req, res) => {
       const { id } = req.params
       const query = { _id: new ObjectId(id) }
       const result = await riderCollection.deleteOne(query)
       res.send(result)
     })
-     app.patch('/rider/:id',async(req,res)=>{
+     app.patch('/rider/:id',vrifyFriebaseToken,verifyAdmin,async(req,res)=>{
        const { id } = req.params
        console.log(req.body)
        const {status,email} = req.body
