@@ -120,7 +120,7 @@ async function run() {
     })
 
     // parcel releted apis 
-    app.get('/my-parcels', vrifyFriebaseToken, async (req, res) => {
+    app.get('/dashboard/my-parcels', vrifyFriebaseToken, async (req, res) => {
       const { email } = req.query
       const query = {}
       if (email) {
