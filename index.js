@@ -242,8 +242,9 @@ async function run() {
       if (newRider.email) {
         query.email = newRider.email
       }
-      const riderExist = riderCollection.findOne(query)
-      if (riderExist) {
+      const riderExist = await riderCollection.findOne(query)
+      console.log(riderExist)
+      if(riderExist) {
         return res.send({ message: "Your Application already taken.Please wait for approval" })
       }
       const result = await riderCollection.insertOne(newRider)
