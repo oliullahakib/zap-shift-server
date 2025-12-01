@@ -120,6 +120,7 @@ async function run() {
     })
 
     // parcel releted apis 
+
     app.get('/parcels',vrifyFriebaseToken,verifyAdmin, async (req, res) => {
       const { deliveryStatus: status } = req.query
       const query = {}
@@ -148,6 +149,23 @@ async function run() {
       newParcel.trakingId = trakingId;
       const result = await parcelCollection.insertOne(newParcel)
       res.send(result)
+    })
+    app.patch('/parcel/:id',async(req,res)=>{
+      const {id}=req.params
+      const {riderId,riderEmail,riderName}=req.body
+      const assignRiderInfo={riderEmail,riderId,riderName}
+      
+      const query={_id:new ObjectId(id)}
+      const update={
+        $set:{...assignRiderInfo,deliveryStatus:"rider-assign"}
+      }
+      const parcelResult =await parcelCollection.updateOne(query,update)
+      
+      // update rider work status 
+      const riderQuery={_id:new ObjectId(riderId)}
+      const riderResult = await riderCollection.updateOne(riderQuery,{$set:{workStatus:"in_delivery"}})
+      console.log({parcelResult,riderResult})
+      res.send(riderResult)
     })
     app.delete('/parcel/:id', async (req, res) => {
       const { id } = req.params
@@ -263,7 +281,6 @@ async function run() {
         query.email = newRider.email
       }
       const riderExist = await riderCollection.findOne(query)
-      console.log(riderExist)
       if (riderExist) {
         return res.send({ message: "Your Application already taken.Please wait for approval" })
       }
