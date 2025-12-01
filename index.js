@@ -238,10 +238,14 @@ async function run() {
     // rider related apis 
 
     app.get('/riders', async (req, res) => {
-      const {district} = req.query
+      const {district,workStatus} = req.query
       const query = {}
       if(district){
         query.district = district
+        
+      }
+      if(workStatus){
+        query.workStatus=workStatus
       }
       const result = await riderCollection.find(query).sort({ createdAt: -1 }).toArray()
       res.send(result)
