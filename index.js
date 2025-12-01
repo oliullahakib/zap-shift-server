@@ -120,6 +120,17 @@ async function run() {
     })
 
     // parcel releted apis 
+    app.get('/parcels',vrifyFriebaseToken,verifyAdmin, async (req, res) => {
+      const { deliveryStatus: status } = req.query
+      const query = {}
+      if (status) {
+        query.deliveryStatus = status
+      }
+      console.log(query)
+      const result = await parcelCollection.find(query).toArray()
+      res.send(result)
+
+    })
     app.get('/dashboard/my-parcels', vrifyFriebaseToken, async (req, res) => {
       const { email } = req.query
       const query = {}
@@ -166,7 +177,7 @@ async function run() {
         customer_email: email,
         metadata: {
           parcelId: parcelId,
-          trakingId:parcelInfo.trakingId
+          trakingId: parcelInfo.trakingId
         },
         success_url: `${process.env.DOMAIN_NAME}/dashboard/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.DOMAIN_NAME}/dashboard/payment-cancel`,
@@ -186,7 +197,7 @@ async function run() {
         return res.send({
           message: "Payment already complite for this parcel",
           transactionId: sessonData.payment_intent,
-          trakingId:parcelExsit.trakingId,
+          trakingId: parcelExsit.trakingId,
         })
       }
       // modify the parcel 
@@ -226,8 +237,13 @@ async function run() {
 
     // rider related apis 
 
-    app.get('/riders', vrifyFriebaseToken, verifyAdmin, async (req, res) => {
-      const result = await riderCollection.find().sort({ createdAt: -1 }).toArray()
+    app.get('/riders', async (req, res) => {
+      const {district} = req.query
+      const query = {}
+      if(district){
+        query.district = district
+      }
+      const result = await riderCollection.find(query).sort({ createdAt: -1 }).toArray()
       res.send(result)
     })
     app.post('/rider', vrifyFriebaseToken, async (req, res) => {
@@ -244,7 +260,7 @@ async function run() {
       }
       const riderExist = await riderCollection.findOne(query)
       console.log(riderExist)
-      if(riderExist) {
+      if (riderExist) {
         return res.send({ message: "Your Application already taken.Please wait for approval" })
       }
       const result = await riderCollection.insertOne(newRider)
@@ -259,11 +275,14 @@ async function run() {
     })
     app.patch('/rider/:id', vrifyFriebaseToken, verifyAdmin, async (req, res) => {
       const { id } = req.params
-      console.log(req.body)
       const { status, email } = req.body
       const query = { _id: new ObjectId(id) }
+      let workStatus = ''
+      if(status==="accepted"){
+        workStatus='available'
+      }
       const update = {
-        $set: { status }
+        $set: { status,workStatus }
       }
       const result = await riderCollection.updateOne(query, update)
 
